@@ -9,21 +9,21 @@ TID = TypeVar("TID")
 
 class CRUDRepository(ABC, Generic[TModel, TCreate, TUpdate, TID]):
     @abstractmethod
-    async def create(self, obj_in: TCreate) -> TModel:
+    def create(self, obj_in: TCreate) -> TModel:
         pass
 
     @abstractmethod
-    async def find_one(self, id: TID) -> Optional[TModel]:
+    def find_one(self, id: TID) -> Optional[TModel]:
         pass
 
     @abstractmethod
-    async def find_all(self) -> List[TModel]:
+    def find_all(self) -> List[TModel]:
         pass
 
     @abstractmethod
-    async def update(self, id: TID, obj_in: TUpdate) -> TModel:
+    def update(self, id: TID, obj_in: TUpdate) -> TModel:
         pass
 
     @abstractmethod
-    async def delete(self, id: TID) -> None:
+    def delete(self, id: TID) -> None:
         pass

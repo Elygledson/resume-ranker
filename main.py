@@ -10,7 +10,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 
-
 security = HTTPBasic()
 
 app = FastAPI(title='ANALISADOR DE CURRÍCULOS',
@@ -19,9 +18,10 @@ app = FastAPI(title='ANALISADOR DE CURRÍCULOS',
 app.include_router(analyzer, prefix='/api/v1', tags=['analyzer'])
 app.include_router(logs, prefix='/api/v1', tags=['logs'])
 
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['http://localhost:4200'],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],

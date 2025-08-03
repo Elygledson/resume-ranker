@@ -1,43 +1,49 @@
+import json
 import requests
 
 from config import settings
+from schemas import SummaryResume
 
 
 class OllamaService:
     def __init__(self) -> None:
         super().__init__()
 
-    def generate_structured_output(self, prompt: str, schema: dict) -> str:
-        response = requests.post(f"{settings.AI_SERVICE_KEY}/generate", json={
+    def extract_summary_from_resume(self, content: str) -> SummaryResume:
+        prompt = f"""
+        A seguir está o conteúdo de um currículo. 
+        
+        {content}
+
+        Extraia as informações conforme o schema abaixo: 
+        Schema:
+        candidate_name: Nome do candidato
+        summary: Um resumo sobre o candidato, incluindo formação, principais experiências, competências, habilidades.
+        """
+
+        response = requests.post(f"{settings.AI_SERVICE_KEY}/chat", json={
             "model": "llama3.2:latest",
             "messages": [{"role": "user", "content": prompt}],
             "stream": False,
-            "format": {
+            "format":  {
                 "type": "object",
                 "properties": {
-                    "name": {
-                        "type": "string"
+                    "candidate_name": {
+                        "type": "string",
                     },
-                    "capital": {
-                        "type": "string"
-                    },
-                    "languages": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
+                    "summary": {
+                        "type": "string",
                     }
                 },
                 "required": [
-                    "name",
-                    "capital",
-                    "languages"
+                    "candidate_name",
+                    "summary"
                 ]
             }
         })
-        return response.json()['response']
+        return json.loads(response.json()['message']['content'])
 
-    def generate(self, query: str) -> str:
+    def find_best_match(self, query: str, resumes: list[SummaryResume]) -> str:
         response = requests.post(f"{settings.AI_SERVICE_KEY}/generate", json={
             "prompt": query,
             "stream": False,

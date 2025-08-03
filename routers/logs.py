@@ -1,4 +1,5 @@
 import logging
+
 from http import HTTPStatus
 from typing import Optional, List
 from fastapi import APIRouter, Depends
@@ -25,20 +26,20 @@ def get_log_service() -> LogService:
     summary="Criar log",
     description="Cria um novo log no banco de dados MongoDB."
 )
-async def create(
+def create(
     log_create_schema: LogCreateSchema,
     log_service: LogService = Depends(get_log_service)
 ):
     """
-    Cria um novo log.
+        Cria um novo log.
 
-    - **request_id**: ID da requisição
-    - **user_id**: ID do usuário que gerou o log
-    - **timestamp**: Data/hora do log
-    - **query**: Pergunta feita pelo usuário
-    - **resultado**: Resposta gerada
-    """
-    return await log_service.create(log_create_schema)
+        - **request_id**: ID da requisição
+        - **user_id**: ID do usuário que gerou o log
+        - **timestamp**: Data/hora do log
+        - **query**: Pergunta feita pelo usuário
+        - **resultado**: Resposta gerada
+        """
+    return log_service.create(log_create_schema)
 
 
 @logs.get(
@@ -57,7 +58,7 @@ async def get_one(
 
     - **id**: ID do log no banco de dados
     """
-    return await log_service.get(id)
+    return log_service.get(id)
 
 
 @logs.get(
@@ -67,13 +68,13 @@ async def get_one(
     summary="Listar todos os logs",
     description="Retorna uma lista com todos os logs armazenados."
 )
-async def get_all(
+def get_all(
     log_service: LogService = Depends(get_log_service)
 ):
     """
-    Lista todos os logs cadastrados no sistema.
-    """
-    return await log_service.get_all()
+        Lista todos os logs cadastrados no sistema.
+        """
+    return log_service.get_all()
 
 
 @logs.delete(
@@ -82,13 +83,13 @@ async def get_all(
     summary="Remover log",
     description="Remove um log específico do banco de dados."
 )
-async def delete(
+def delete(
     id: str,
     log_service: LogService = Depends(get_log_service)
 ):
     """
-    Remove um log pelo ID.
+        Remove um log pelo ID.
 
-    - **id**: ID do log que será deletado
-    """
-    await log_service.delete(id)
+        - **id**: ID do log que será deletado
+        """
+    log_service.delete(id)
