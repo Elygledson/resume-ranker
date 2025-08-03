@@ -33,7 +33,12 @@ class LogService:
         return self.repo.find_all()
 
     def update(self, id: str, data: LogUpdateSchema) -> LogUpdateSchema:
-        return self.repo.update(id, data)
+        log = self.get(id)
+        return self.repo.update(log.id, data)
+
+    def patch_feedback(self, id: str, feedback: bool) -> LogUpdateSchema:
+        log = self.get(id)
+        return self.repo.update(log.id, LogUpdateSchema(feedback=feedback))
 
     def delete(self, id: str) -> None:
         log = self.get(id)

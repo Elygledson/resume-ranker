@@ -1,4 +1,5 @@
 import enum
+
 from typing import Optional
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
@@ -25,13 +26,16 @@ class LogCreateSchema(BaseModel):
     resultado: Optional[AnalysisOutputSchema] = Field(
         None, description="Resposta gerada pela aplicação"
     )
+    feedback: Optional[bool] = Field(
+        None, description="Feedback do usuário (True = gostei, False = não gostei)"
+    )
 
     class Config:
         use_enum_values = True
         json_schema_extra = {
             "example": {
                 "request_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                "user_id": "1",
+                "user_id": "3fa85f64-5717-4562-b3fc-2c963f66afa8",
                 "timestamp": "2025-08-02T14:00:00Z",
                 "query": "engenheiro com experiência em Python e liderança",
                 "status": "PROCESSED",
@@ -52,8 +56,13 @@ class LogCreateSchema(BaseModel):
         }
 
 
-class LogUpdateSchema(LogCreateSchema):
-    id: str = Field(..., description="ID do log a ser atualizado")
+class LogUpdateSchema(BaseModel):
+    status: Optional[Status] = None
+    resultado: Optional[AnalysisOutputSchema] = None
+    feedback: Optional[bool] = None
+
+    class Config:
+        use_enum_values = True
 
 
 class LogOutputSchema(LogCreateSchema):

@@ -5,7 +5,7 @@ import easyocr
 import numpy as np
 
 
-class TextProcessorService:
+class VisionTextProcessor:
     def __init__(self):
         self.reader = easyocr.Reader(['pt'])
 

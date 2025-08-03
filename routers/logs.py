@@ -3,20 +3,14 @@ import logging
 from http import HTTPStatus
 from typing import Optional, List
 from fastapi import APIRouter, Depends
-from repositories import LogRepositoryMongo
+from celery_app.tasks import get_log_service
 from services.log_service import LogService
-from config.database import get_mongo_collection
 from schemas.logs_schemas import LogCreateSchema, LogOutputSchema
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 logs = APIRouter()
-
-
-def get_log_service() -> LogService:
-    repo = LogRepositoryMongo(get_mongo_collection('logs'))
-    return LogService(repo)
 
 
 @logs.post(
@@ -42,6 +36,11 @@ def create(
     return log_service.create(log_create_schema)
 
 
+@logs.patch("/logs/{log_id}/feedback", response_model=LogOutputSchema)
+def patch(log_id: str, feedback: bool, log_service: LogService = Depends(get_log_service)):
+    return log_service.patch_feedback(log_id, feedback)
+
+
 @logs.get(
     "/logs/{id}",
     status_code=HTTPStatus.OK,
@@ -49,7 +48,7 @@ def create(
     summary="Buscar log por ID",
     description="Retorna um log específico a partir do ID fornecido."
 )
-async def get_one(
+def get_one(
     id: str,
     log_service: LogService = Depends(get_log_service)
 ):

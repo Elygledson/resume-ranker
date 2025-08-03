@@ -1,28 +1,38 @@
-name: 'resume-analyzer'
+name: resume_analyzer
 
 services:
   api:
-      container_name: resume_analyzer_api
-      build: .
-      restart: unless-stopped
-      env_file:
-        - .env
-      ports:
-        - "8000:8000"
-      depends_on:
-        - mongo
-      networks:
-        - resume_analyzer_network
+    container_name: resume_analyzer_api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - resume_analyzer_network
 
   celery:
-    container_name: celery
-    build: .
+    container_name: resume_analyzer_celery
+    build:
+      context: .
+      dockerfile: Dockerfile
     command: celery --app celery_app.config.app worker --loglevel=info --pool=prefork
+    restart: unless-stopped
     env_file:
       - .env
     depends_on:
-      - mongo
-      - redis
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - resume_analyzer_network
 
@@ -41,28 +51,43 @@ services:
       - resume_analyzer_network
     volumes:
       - redis_data:/data
- 
+
   mongo:
     image: mongo:6.0
-    container_name: mongodb
+    container_name: resume_analyzer_mongo
     ports:
       - "27017:27017"
     env_file:
       - .env
-    volumes:
-      - mongo_data:/data/db
+    restart: unless-stopped
     networks:
       - resume_analyzer_network
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   ollama:
-    build: ./ollama
+    build:
+      context: ./ollama
+      dockerfile: Dockerfile
+    container_name: resume_analyzer_ollama
     ports:
-      - 11434:11434
+      - "11434:11434"
     volumes:
       - ollama_vol:/ollama
     networks:
       - resume_analyzer_network
     entrypoint: [ "/usr/bin/bash", "pull-llama3.sh" ]
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
 
 networks:
   resume_analyzer_network:

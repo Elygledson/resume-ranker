@@ -2,6 +2,14 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
+class ResumeAnalysisStartedResponse(BaseModel):
+    log_id: str
+    message: str = Field(
+        default="Os currículos foram enviados para análises",
+        description="Mensagem indicando que a análise foi iniciada com sucesso"
+    )
+
+
 class SummaryResume(BaseModel):
     candidate_name: str = Field(..., description="Nome do candidato")
     summary: str = Field(..., description="Resumo extraído do currículo")

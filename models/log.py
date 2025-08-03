@@ -16,6 +16,7 @@ class LogModel(BaseModel):
     query: Optional[str] = None
     status: Status
     resultado: Optional[AnalysisOutputSchema] = None
+    feedback: Optional[bool] = None
 
     class Config:
         populate_by_name = True

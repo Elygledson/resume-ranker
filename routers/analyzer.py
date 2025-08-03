@@ -3,9 +3,11 @@ import uuid
 import logging
 
 from uuid import UUID
-from typing import Optional
-from celery_app.tasks import analyze_resume
-from fastapi import APIRouter, Form, HTTPException, UploadFile
+from typing import List, Optional
+from services.log_service import LogService
+from celery_app.tasks import analyze_resume, get_log_service
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
+from schemas import LogCreateSchema, Status, ResumeAnalysisStartedResponse
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -20,16 +22,18 @@ analyzer = APIRouter()
 @analyzer.post(
     "/analyze-resume",
     status_code=200,
+    response_model=ResumeAnalysisStartedResponse,
     summary="Analisar currículos e identificar o melhor candidato")
 async def analyze(
-    files: list[UploadFile],
+    files: List[UploadFile],
     query: Optional[str] = Form(
         default=None, description="Consulta textual a ser feita nos currículos"),
     request_id: UUID = Form(..., description="Identificador da requisição"),
     user_id: UUID = Form(...,
-                         description="Identificador do usuário solicitante")
+                         description="Identificador do usuário solicitante"),
+    log_service: LogService = Depends(get_log_service)
 ):
-    paths: list[str] = []
+    paths: List[str] = []
 
     for file in files:
         if file.content_type not in ["application/pdf", "image/jpeg", "image/png"]:
@@ -47,6 +51,13 @@ async def analyze(
 
         paths.append(file_location)
 
-    analyze_resume.delay(paths, str(user_id), str(request_id), query)
+    log = log_service.create(LogCreateSchema(
+        request_id=str(request_id),
+        user_id=str(user_id),
+        query=query,
+        status=Status.PROCESSING
+    ))
 
-    return {"message": "os currículos foram enviados para análises"}
+    analyze_resume.delay(paths, log.id, query)
+
+    return ResumeAnalysisStartedResponse(log_id=log.id)

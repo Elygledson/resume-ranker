@@ -1,8 +1,8 @@
 from bson import ObjectId
 from models import LogModel
 from typing import Optional, List
+from schemas import LogCreateSchema, LogUpdateSchema
 from repositories.base_repository import CRUDRepository
-from schemas.logs_schemas import LogCreateSchema, LogUpdateSchema
 
 
 class LogRepositoryMongo(CRUDRepository[LogModel, LogCreateSchema, LogUpdateSchema, str]):
@@ -25,7 +25,7 @@ class LogRepositoryMongo(CRUDRepository[LogModel, LogCreateSchema, LogUpdateSche
     def update(self, id: str, obj_in: LogUpdateSchema) -> LogModel:
         self.collection.update_one({"_id": ObjectId(id)}, {
             "$set": obj_in.model_dump(exclude_unset=True)})
-        updated = self.collection.find_one({"_id": id})
+        updated = self.collection.find_one({"_id": ObjectId(id)})
         return LogModel(**updated)
 
     def delete(self, id: str) -> None:
