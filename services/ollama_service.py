@@ -11,14 +11,18 @@ class OllamaService:
 
     def extract_summary_from_resume(self, content: str) -> SummaryResume:
         prompt = f"""
-        A seguir está o conteúdo de um currículo. 
-        
+        Você é uma especialista em elaborar resumos de currículos, com grande habilidade para captar o máximo de informações relevantes de cada documento.
+
+        A seguir, está o conteúdo de um currículo profissional:
+
         {content}
 
-        Extraia as informações conforme o schema abaixo: 
-        Schema:
-        candidate_name: Nome do candidato
-        summary: Um resumo sobre o candidato, incluindo formação, principais experiências, competências, habilidades.
+        Extraia as informações conforme o esquema abaixo, com riqueza de detalhes:
+
+        - candidate_name: nome completo do candidato
+        - summary: um resumo completo e detalhado, incluindo formação acadêmica, principais experiências profissionais, competências e habilidades.
+
+        Por favor, retorne apenas um JSON que siga esse esquema.
         """
 
         response = requests.post(f"{settings.AI_SERVICE_KEY}/chat", json={

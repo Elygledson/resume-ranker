@@ -47,6 +47,6 @@ async def analyze(
 
         paths.append(file_location)
 
-    analyze_resume.delay(paths, user_id, request_id, query)
+    analyze_resume.delay(paths, str(user_id), str(request_id), query)
 
     return {"message": "os currículos foram enviados para análises"}

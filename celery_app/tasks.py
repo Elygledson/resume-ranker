@@ -1,5 +1,4 @@
 import logging
-from uuid import UUID
 
 from celery_app import app
 from typing import Optional
@@ -9,7 +8,7 @@ from services import TextProcessorService, ResumeAnalyzerService
 from repositories.logs_repository_mongo import LogRepositoryMongo
 from schemas import LogCreateSchema, Status, AnalysisOutputSchema, SummaryResume
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
@@ -19,7 +18,7 @@ def get_log_service() -> LogService:
 
 
 @app.task
-def analyze_resume(paths: list[str], user_id: UUID, request_id: UUID, query: Optional[str] = None) -> None:
+def analyze_resume(paths: list[str], user_id: str, request_id: str, query: Optional[str] = None) -> None:
     log_service = get_log_service()
     text_processor = TextProcessorService()
     analyzer_service = ResumeAnalyzerService()
@@ -36,10 +35,6 @@ def analyze_resume(paths: list[str], user_id: UUID, request_id: UUID, query: Opt
             content = text_processor.extract_content(filepath)
             summary = analyzer_service.generate_summary(content)
             resumes.append(summary)
-
-        logger.ino(
-            f"resumes {resumes}"
-        )
 
         resultado = AnalysisOutputSchema(resumes=resumes, justification=None)
 
