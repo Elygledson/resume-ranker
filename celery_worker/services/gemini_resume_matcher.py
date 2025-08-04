@@ -1,10 +1,10 @@
-import json
 import logging
-import requests
 import numpy as np
 
 from typing import List
+from google import genai
 from config import settings
+from google.genai import types
 from schemas import SummaryResume
 from services.base_resume_matcher import BaseResumeMatcher
 
@@ -12,18 +12,17 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-class OllamaResumeMatcher(BaseResumeMatcher):
+class GeminiResumeMatcher(BaseResumeMatcher):
+    def __init__(self) -> None:
+        self.client = genai.Client(api_key=settings.AI_SERVICE_KEY)
+
     def _cosine_similarity(self, vec1: List[float], vec2: List[float]) -> float:
         v1 = np.array(vec1)
         v2 = np.array(vec2)
         return float(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
 
     def _get_embedding(self, text: str) -> List[float]:
-        response = requests.post(f"{settings.AI_SERVICE_KEY}/embed", json={
-            "model": "bge-m3",
-            "input": text
-        })
-        return response.json()['embeddings'][0]
+        return self.client.models.embed_content(model="text-embedding-004", contents=text).embeddings[0].values
 
     def extract_summary_from_resume(self, content: str) -> SummaryResume:
         prompt = f"""
@@ -41,29 +40,28 @@ class OllamaResumeMatcher(BaseResumeMatcher):
         Por favor, retorne apenas um JSON que siga esse esquema.
         """
 
-        response = requests.post(f"{settings.AI_SERVICE_KEY}/chat", json={
-            "model": "llama3.2:latest",
-            "messages": [{"role": "user", "content": prompt}],
-            "stream": False,
-            "format":  {
-                "type": "object",
-                "properties": {
-                    "candidate_name": {
-                        "type": "string",
-                        "description": "Nome completo do candidato"
-                    },
-                    "summary": {
-                        "type": "string",
-                        "description": "Um resumo completo e detalhado, incluindo formação acadêmica, principais experiências profissionais, competências e habilidades."
-                    }
-                },
-                "required": [
-                    "candidate_name",
-                    "summary"
-                ]
-            }
-        })
-        return SummaryResume(**json.loads(response.json()['message']['content']))
+        response = self.client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt,
+            config={
+                "response_mime_type": "application/json",
+                'response_schema': {
+                    "type": "object",
+                            "properties": {
+                                "candidate_name": {
+                                    "type": "string",
+                                    "description": "Nome completo do candidato"
+                                },
+                                "summary": {
+                                    "type": "string",
+                                    "description": "Um resumo completo e detalhado, incluindo formação acadêmica, principais experiências profissionais, competências e habilidades."
+                                }
+                            },
+                    "required": ["candidate_name", "summary"]
+                }
+            },
+        )
+        return SummaryResume(**response.parsed)
 
     def rank_resumes_by_similarity(self, query: str, resumes: List[SummaryResume], k: int = 3, threshold: float = 0.5) -> List[SummaryResume]:
         scored_resumes = []
@@ -89,9 +87,7 @@ class OllamaResumeMatcher(BaseResumeMatcher):
         summaries = {chr(10).join(
             [f"{i+1}. Nome: {r.candidate_name}\nResumo: {r.summary}" for i, r in enumerate(resumes)])}
 
-        prompt = f"""
-        Você é uma especialista em análise de currículos com foco em identificar o candidato mais adequado com base em uma necessidade específica.
-
+        contents = f"""
         A seguir está a descrição da vaga ou necessidade:
         ---
         {query}
@@ -113,15 +109,14 @@ class OllamaResumeMatcher(BaseResumeMatcher):
         - Justificativa: <Texto detalhado explicando por que este candidato é o mais adequado em comparação aos demais>
         """
 
-        logger.info(f'{prompt}')
+        logger.info(f'{contents}')
 
-        response = requests.post(f"{settings.AI_SERVICE_KEY}/generate", json={
-            "prompt": prompt,
-            "stream": False,
-            "model": "llama3.2:latest",
-            "options": {
-                "temperature": 0.2,
-                "repeat_penalty": 1,
-            }
-        })
-        return response.json()['response']
+        response = self.client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=contents,
+            config=types.GenerateContentConfig(
+                system_instruction="Você é uma especialista em análise de currículos com foco em identificar o"
+                "candidato mais adequado com base em uma necessidade específica.",
+            ),
+        )
+        return response.text
