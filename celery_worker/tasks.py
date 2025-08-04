@@ -1,8 +1,9 @@
 import logging
 
-from config import app
+from bson import ObjectId
 from settings import settings
 from pymongo import MongoClient
+from config import celery_worker
 from typing import List, Optional
 from services.factory import get_matcher
 from services.vision_text_processor import VisionTextProcessor
@@ -18,14 +19,14 @@ def get_mongo_collection(collection_name: str):
     return db.get_collection(collection_name)
 
 
-@app.task
-def analyze_resume(paths: List[str], log_id: str, query: Optional[str] = None) -> None:
+@celery_worker.task
+def analyze_resume(log_id: str, filenames: List[str], query: Optional[str] = None) -> None:
     matcher = get_matcher("ollama")
     vision_text_processor = VisionTextProcessor()
     resume_analyzer = ResumeAnalyzerService(matcher)
     database = get_mongo_collection('logs')
 
-    log = database.find_one({"_id": log_id})
+    log = database.find_one({"_id": ObjectId(log_id)})
     if not log:
         logger.error(f"Log com ID {log_id} não encontrado.")
         return
@@ -34,9 +35,9 @@ def analyze_resume(paths: List[str], log_id: str, query: Optional[str] = None) -
         logger.info(
             f"[log_id={log_id}] Iniciando o processamento dos arquivos")
         resumes = []
-
-        for filepath in paths:
-            logger.debug(f"Extraindo texto de {filepath}")
+        for filename in filenames:
+            logger.debug(f"Extraindo texto de {filename}")
+            filepath = "api/static/0a5a5051-f3e0-42d6-acf9-98527aeac9b8_curriculo.pdf"
             content = vision_text_processor.extract_content(filepath)
             summary = resume_analyzer.generate_summary(content)
             resumes.append(summary)
@@ -53,7 +54,7 @@ def analyze_resume(paths: List[str], log_id: str, query: Optional[str] = None) -
         logger.info(f"Processamento dos currículos finalizado com sucesso.")
 
         database.update_one(
-            {"_id": log_id},
+            {"_id": ObjectId(log_id)},
             {"$set": {
                 "status": "PROCESSED",
                 "resultado": {
@@ -66,6 +67,6 @@ def analyze_resume(paths: List[str], log_id: str, query: Optional[str] = None) -
     except Exception as e:
         logger.exception(f"Erro ao processar os currículos {e}")
         database.update_one(
-            {"_id": log_id},
+            {"_id": ObjectId(log_id)},
             {"$set": {"status": "PROCESSING_FAILED"}}
         )

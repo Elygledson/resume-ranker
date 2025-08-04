@@ -80,21 +80,3 @@ def get_all(
         Lista todos os logs cadastrados no sistema.
         """
     return log_service.get_all()
-
-
-@logs.delete(
-    "/logs/{id}",
-    status_code=HTTPStatus.NO_CONTENT,
-    summary="Remover log",
-    description="Remove um log específico do banco de dados."
-)
-def delete(
-    id: str,
-    log_service: LogService = Depends(get_log_service)
-):
-    """
-        Remove um log pelo ID.
-
-        - **id**: ID do log que será deletado
-        """
-    log_service.delete(id)
