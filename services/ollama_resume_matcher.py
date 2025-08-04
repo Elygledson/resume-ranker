@@ -1,7 +1,8 @@
 import json
-import requests
-
 import logging
+import requests
+import numpy as np
+
 from typing import List
 from config import settings
 from schemas import SummaryResume
@@ -12,6 +13,18 @@ logger = logging.getLogger(__name__)
 
 
 class OllamaResumeMatcher(BaseResumeMatcher):
+    def _cosine_similarity(self, vec1: List[float], vec2: List[float]) -> float:
+        v1 = np.array(vec1)
+        v2 = np.array(vec2)
+        return float(np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2)))
+
+    def _get_embedding(self, text: str) -> List[float]:
+        response = requests.post(f"{settings.AI_SERVICE_KEY}/embed", json={
+            "model": "bge-m3",
+            "input": text
+        })
+        return response.json()['embeddings'][0]
+
     def extract_summary_from_resume(self, content: str) -> SummaryResume:
         prompt = f"""
         Você é uma especialista em elaborar resumos de currículos, com grande habilidade para captar o máximo de informações relevantes de cada documento.
@@ -50,7 +63,30 @@ class OllamaResumeMatcher(BaseResumeMatcher):
         })
         return SummaryResume(**json.loads(response.json()['message']['content']))
 
-    def find_best_match(self, query: str, resumes: List[SummaryResume]) -> str:
+    def rank_resumes_by_similarity(self, query: str, resumes: List[SummaryResume], k: int = 3, threshold: float = 0.5) -> List[SummaryResume]:
+        query_embedding = self._get_embedding(query)
+        scored_resumes = []
+
+        for resume in resumes:
+
+            resume_embedding = self._get_embedding(resume.summary)
+
+            similarity = self._cosine_similarity(
+                query_embedding, resume_embedding)
+
+            if similarity >= threshold:
+                scored_resumes.append((resume, similarity))
+
+        scored_resumes.sort(key=lambda x: x[1], reverse=True)
+
+        top_k = [resume for resume, _ in scored_resumes[:k]]
+        logger.info(f'{scored_resumes}')
+        return top_k
+
+    def generate_candidate_justification(self, query: str, resumes: List[SummaryResume]) -> str:
+        summaries = {chr(10).join(
+            [f"{i+1}. Nome: {r.candidate_name}\nResumo: {r.summary}" for i, r in enumerate(resumes)])}
+
         prompt = f"""
             Você é uma especialista em análise de currículos com foco em identificar o candidato mais adequado com base em uma necessidade específica.
 
@@ -62,7 +98,7 @@ class OllamaResumeMatcher(BaseResumeMatcher):
             Com base nessa necessidade, analise detalhadamente os seguintes currículos, extraídos previamente e já resumidos:
 
             Resumos:
-            {chr(10).join([f"{i+1}. Nome: {r.candidate_name}\nResumo: {r.summary}" for i, r in enumerate(resumes)])}
+            {summaries}
 
             Tarefa:
             1. Avalie cada candidato em relação aos requisitos e contexto da vaga.

@@ -38,12 +38,10 @@ class AnalysisOutputSchema(BaseModel):
                     {
                         "candidate_name": "Maria Silva",
                         "summary": "Engenheira de software com 5 anos de experiência em Python e liderança de equipes.",
-                        "score": 0.92
                     },
                     {
                         "candidate_name": "João Souza",
                         "summary": "Desenvolvedor backend com 2 anos de experiência em Java e Spring Boot.",
-                        "score": 0.67
                     }
                 ],
                 "justification": "Maria Silva apresentou maior aderência aos critérios de liderança e domínio em Python."

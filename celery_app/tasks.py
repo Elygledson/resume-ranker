@@ -30,27 +30,29 @@ def analyze_resume(paths: List[str], log_id: str, query: Optional[str] = None) -
         return
 
     try:
-        logger.info("Iniciando o processamento dos arquivos")
+        logger.info(
+            f"[log_id={log_id}] Iniciando o processamento dos arquivos")
         for filepath in paths:
             logger.debug(f"Extraindo texto de {filepath}")
             content = vision_text_processor.extract_content(filepath)
             summary = resume_analyzer.generate_summary(content)
             resumes.append(summary)
 
-        resultado = AnalysisOutputSchema(resumes=resumes, justification=None)
+        final_resumes = resumes
+        justification = None
 
         if query:
             logger.debug(f"Analisando com query: {query}")
-            resultado.justification = resume_analyzer.find_best_resume(
-                query, resumes)
+            top_k_resumes = resume_analyzer.rank_resumes(query, resumes)
+            final_resumes = top_k_resumes
+            justification = resume_analyzer.generate_justification(query, top_k_resumes)
 
         logger.info(f"Processamento dos currículos finalizado com sucesso.")
-
+        resultado = AnalysisOutputSchema(resumes=final_resumes, justification=justification)
         log_service.update(
             log.id,
             LogUpdateSchema(status=Status.PROCESSED, resultado=resultado)
         )
-
     except Exception as e:
         logger.exception(f"Erro ao processar os currículos {e}")
         log_service.update(log.id, LogUpdateSchema(
