@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     REDIS_HOST: str
     REDIS_PORT: str
     AI_SERVICE_KEY: str
+    AI_SERVICE_NAME: str
     MONGO_INITDB_ROOT_PORT: str
     MONGO_INITDB_ROOT_HOST: str
     MONGO_INITDB_ROOT_DBNAME: str

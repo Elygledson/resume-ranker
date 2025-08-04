@@ -21,9 +21,6 @@ def get_mongo_collection(collection_name: str):
 
 @celery_worker.task
 def analyze_resume(log_id: str, filenames: List[str], query: Optional[str] = None) -> None:
-    matcher = get_matcher("ollama")
-    vision_text_processor = VisionTextProcessor()
-    resume_analyzer = ResumeAnalyzerService(matcher)
     database = get_mongo_collection('logs')
 
     log = database.find_one({"_id": ObjectId(log_id)})
@@ -34,11 +31,15 @@ def analyze_resume(log_id: str, filenames: List[str], query: Optional[str] = Non
     try:
         logger.info(
             f"[log_id={log_id}] Iniciando o processamento dos arquivos")
+
         resumes = []
+        vision_text_processor = VisionTextProcessor()
+        matcher = get_matcher(settings.AI_SERVICE_NAME)
+        resume_analyzer = ResumeAnalyzerService(matcher)
+
         for filename in filenames:
             logger.debug(f"Extraindo texto de {filename}")
-            filepath = "api/static/0a5a5051-f3e0-42d6-acf9-98527aeac9b8_curriculo.pdf"
-            content = vision_text_processor.extract_content(filepath)
+            content = vision_text_processor.extract_content(filename)
             summary = resume_analyzer.generate_summary(content)
             resumes.append(summary)
 
