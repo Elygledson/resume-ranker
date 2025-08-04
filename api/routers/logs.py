@@ -3,14 +3,20 @@ import logging
 from http import HTTPStatus
 from typing import Optional, List
 from fastapi import APIRouter, Depends
-from celery_app.tasks import get_log_service
+from config import get_mongo_collection
 from services.log_service import LogService
+from repositories import LogRepositoryMongo
 from schemas.logs_schemas import LogCreateSchema, LogOutputSchema
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 logs = APIRouter()
+
+
+def get_log_service() -> LogService:
+    repo = LogRepositoryMongo(get_mongo_collection('logs'))
+    return LogService(repo)
 
 
 @logs.post(

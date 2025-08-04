@@ -4,7 +4,7 @@ services:
   api:
     container_name: resume_analyzer_api
     build:
-      context: .
+      context: ./api
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
@@ -22,9 +22,8 @@ services:
   celery:
     container_name: resume_analyzer_celery
     build:
-      context: .
+      context: ./celery_app
       dockerfile: Dockerfile
-    command: celery --app celery_app.config.app worker --loglevel=info --pool=prefork
     restart: unless-stopped
     env_file:
       - .env

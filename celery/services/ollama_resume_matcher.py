@@ -64,8 +64,8 @@ class OllamaResumeMatcher(BaseResumeMatcher):
         return SummaryResume(**json.loads(response.json()['message']['content']))
 
     def rank_resumes_by_similarity(self, query: str, resumes: List[SummaryResume], k: int = 3, threshold: float = 0.5) -> List[SummaryResume]:
-        query_embedding = self._get_embedding(query)
         scored_resumes = []
+        query_embedding = self._get_embedding(query)
 
         for resume in resumes:
 

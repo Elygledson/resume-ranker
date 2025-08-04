@@ -4,8 +4,9 @@ import logging
 
 from uuid import UUID
 from typing import List, Optional
+from config import get_mongo_collection
 from services.log_service import LogService
-from celery_app.tasks import analyze_resume, get_log_service
+from repositories import LogRepositoryMongo
 from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 from schemas import LogCreateSchema, Status, ResumeAnalysisStartedResponse
 
@@ -17,6 +18,11 @@ UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 analyzer = APIRouter()
+
+
+def get_log_service() -> LogService:
+    repo = LogRepositoryMongo(get_mongo_collection('logs'))
+    return LogService(repo)
 
 
 @analyzer.post(
@@ -58,6 +64,6 @@ async def analyze(
         status=Status.PROCESSING
     ))
 
-    analyze_resume.delay(paths, log.id, query)
+    # analyze_resume.delay(paths, log.id, query)
 
     return ResumeAnalysisStartedResponse(log_id=log.id)
