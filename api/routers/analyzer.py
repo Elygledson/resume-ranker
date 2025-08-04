@@ -3,7 +3,9 @@ import uuid
 import logging
 
 from uuid import UUID
+from http import HTTPStatus
 from typing import List, Optional
+from config import celery, settings
 from config import get_mongo_collection
 from services.log_service import LogService
 from repositories import LogRepositoryMongo
@@ -14,8 +16,7 @@ from schemas import LogCreateSchema, Status, ResumeAnalysisStartedResponse
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-UPLOAD_DIR = "uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+os.makedirs(settings.STORAGE, exist_ok=True)
 
 analyzer = APIRouter()
 
@@ -27,7 +28,7 @@ def get_log_service() -> LogService:
 
 @analyzer.post(
     "/analyze-resume",
-    status_code=200,
+    status_code=HTTPStatus.OK,
     response_model=ResumeAnalysisStartedResponse,
     summary="Analisar currículos e identificar o melhor candidato")
 async def analyze(
@@ -39,7 +40,7 @@ async def analyze(
                          description="Identificador do usuário solicitante"),
     log_service: LogService = Depends(get_log_service)
 ):
-    paths: List[str] = []
+    filenames: List[str] = []
 
     for file in files:
         if file.content_type not in ["application/pdf", "image/jpeg", "image/png"]:
@@ -49,13 +50,13 @@ async def analyze(
     for file in files:
         unique_id = uuid.uuid4()
         filename = f"{unique_id}_{file.filename}"
-        file_location = os.path.join(UPLOAD_DIR, filename)
+        file_location = os.path.join(settings.STORAGE, filename)
 
         with open(file_location, "wb") as f:
             content = await file.read()
             f.write(content)
 
-        paths.append(file_location)
+        filenames.append(filename)
 
     log = log_service.create(LogCreateSchema(
         request_id=str(request_id),
@@ -63,7 +64,5 @@ async def analyze(
         query=query,
         status=Status.PROCESSING
     ))
-
-    # analyze_resume.delay(paths, log.id, query)
-
+    celery.send_task("tasks.analyze_resume", args=[log.id, filenames, query])
     return ResumeAnalysisStartedResponse(log_id=log.id)

@@ -9,4 +9,4 @@ COPY . /app
 
 EXPOSE 8000
 
-CMD celery -A config.app worker --loglevel=info --pool=prefork
+CMD celery --app config.celery_worker worker --loglevel=info --pool=prefork

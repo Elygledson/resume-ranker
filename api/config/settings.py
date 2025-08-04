@@ -5,6 +5,7 @@ BASE_DIR = Path(__file__).parent.parent.parent.resolve()
 
 
 class Settings(BaseSettings):
+    STORAGE: str
     REDIS_DB: str
     REDIS_HOST: str
     REDIS_PORT: str

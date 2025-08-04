@@ -3,7 +3,9 @@ from pydantic_settings import BaseSettings
 
 BASE_DIR = Path(__file__).parent.parent.resolve()
 
+
 class Settings(BaseSettings):
+    STORAGE: str
     REDIS_DB: str
     REDIS_HOST: str
     REDIS_PORT: str
@@ -25,7 +27,6 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = BASE_DIR / ".env",
-        print(env_file)
         env_file_encoding = "utf-8"
 
 
