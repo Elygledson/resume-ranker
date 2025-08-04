@@ -86,8 +86,8 @@ class OllamaResumeMatcher(BaseResumeMatcher):
         return top_k
 
     def generate_candidate_justification(self, query: str, resumes: List[SummaryResume]) -> str:
-        summaries = {chr(10).join(
-            [f"{i+1}. Nome: {r.candidate_name}\nResumo: {r.summary}" for i, r in enumerate(resumes)])}
+        summaries = chr(10).join(
+            [f"{i+1}. Nome: {r.candidate_name}\nResumo: {r.summary}" for i, r in enumerate(resumes)])
 
         prompt = f"""
         Você é uma especialista em análise de currículos com foco em identificar o candidato mais adequado com base em uma necessidade específica.
@@ -112,9 +112,7 @@ class OllamaResumeMatcher(BaseResumeMatcher):
         - Candidato mais adequado: <Nome>
         - Justificativa: <Texto detalhado explicando por que este candidato é o mais adequado em comparação aos demais>
         """
-
         logger.info(f'{prompt}')
-
         response = requests.post(f"{settings.AI_SERVICE_KEY}/generate", json={
             "prompt": prompt,
             "stream": False,

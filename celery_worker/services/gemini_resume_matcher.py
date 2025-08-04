@@ -84,8 +84,7 @@ class GeminiResumeMatcher(BaseResumeMatcher):
         return top_k
 
     def generate_candidate_justification(self, query: str, resumes: List[SummaryResume]) -> str:
-        summaries = {chr(10).join(
-            [f"{i+1}. Nome: {r.candidate_name}\nResumo: {r.summary}" for i, r in enumerate(resumes)])}
+        summaries = chr(10).join([f"{i+1}. Nome: {r.candidate_name}\nResumo: {r.summary}" for i, r in enumerate(resumes)])
 
         contents = f"""
         A seguir está a descrição da vaga ou necessidade:
@@ -108,9 +107,7 @@ class GeminiResumeMatcher(BaseResumeMatcher):
         - Candidato mais adequado: <Nome>
         - Justificativa: <Texto detalhado explicando por que este candidato é o mais adequado em comparação aos demais>
         """
-
         logger.info(f'{contents}')
-
         response = self.client.models.generate_content(
             model="gemini-2.5-flash",
             contents=contents,

@@ -39,7 +39,7 @@ def analyze_resume(log_id: str, filenames: List[str], query: Optional[str] = Non
 
         for filename in filenames:
             logger.debug(f"Extraindo texto de {filename}")
-            content = vision_text_processor.extract_content(filename)
+            content = vision_text_processor.extract_content('da85b5f2-d287-4601-9ada-96051fc24444_Curriculo_ Elygledson Bezerra.pdf')
             summary = resume_analyzer.generate_summary(content)
             resumes.append(summary)
 
