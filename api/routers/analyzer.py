@@ -30,7 +30,8 @@ def get_log_service() -> LogService:
     "/analyze-resume",
     status_code=HTTPStatus.OK,
     response_model=ResumeAnalysisStartedResponse,
-    summary="Analisar currículos e identificar o melhor candidato")
+    summary="Analisar currículos e identificar o melhor candidato",
+    description="Recebe uma lista de arquivos (PDFs ou imagens), armazena-os e inicia uma tarefa para análise dos currículos.")
 async def analyze(
     files: List[UploadFile],
     query: Optional[str] = Form(
@@ -40,6 +41,23 @@ async def analyze(
                          description="Identificador do usuário solicitante"),
     log_service: LogService = Depends(get_log_service)
 ):
+    """
+    Inicia a análise de currículos enviados e retorna o ID do log associado à análise.
+
+    Args:
+        files (List[UploadFile]): Lista de arquivos enviados (PDFs ou imagens).
+        query (Optional[str]): Consulta textual para filtrar ou guiar a análise.
+        request_id (UUID): ID da requisição.
+        user_id (UUID): ID do usuário que fez a requisição.
+        log_service (LogService): Serviço de log injetado via dependência.
+
+    Raises:
+        HTTPException: Se algum arquivo estiver em formato não suportado.
+
+    Returns:
+        ResumeAnalysisStartedResponse: Contém o ID do log da análise iniciada.
+    """
+
     filenames: List[str] = []
 
     for file in files:
