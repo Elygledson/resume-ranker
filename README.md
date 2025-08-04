@@ -48,6 +48,12 @@ Pensando nisso, esta aplicação foi desenvolvida para automatizar a leitura, su
 5. O modelo retorna os currículos que mais combinam com a vaga, com **justificativas claras**.
 6. A execução é registrada no MongoDB para fins de auditoria e rastreabilidade.
 
+As imagens abaixo ilustram o pipeline de execução da aplicação e a arquitetura geral do sistema:
+## Pipeline da Aplicação
+![Pipeline de Execução](pipeline.png)
+## Diagrama da Arquitetura
+![Diagrama da Arquitetura](arquitetura.png)
+
 ---
 
 ## Instalação
@@ -90,3 +96,54 @@ MONGO_INITDB_ROOT_PASSWORD=admin123
 ```bash
 docker compose up -d --build
 ```
+
+## Como usar a aplicação?
+
+Para utilizar a aplicação, é necessário fazer requisições HTTP utilizando ferramentas como **Postman**, **Swagger UI** ou qualquer cliente de API de sua preferência.
+
+A documentação interativa da API está disponível em:
+
+🔗 **http://localhost:8000/doc**
+
+Nela, você encontrará todos os endpoints organizados por módulos:
+
+### 🔹 Módulos disponíveis
+
+- **Analyzer**
+- **Logs**
+
+---
+
+### 🔍 1. Analyzer
+
+Este módulo é responsável por iniciar a análise dos currículos.
+
+Você deve fazer uma requisição `POST` para o endpoint `/analyze-resume`, enviando os seguintes campos via **form-data**:
+
+- `files`: Um ou mais arquivos (PDF, JPEG, PNG)
+- `request_id`: Identificador único da requisição (UUID)
+- `user_id`: Identificador do usuário solicitante (UUID)
+- `query`: *(opcional)* Texto da vaga ou pergunta a ser usada na análise
+
+#### ✅ Resposta esperada:
+A API irá retornar um `log_id`.  
+Esse ID identifica a requisição de análise e pode ser usado para consultar o resultado posteriormente.
+
+O log inicialmente terá o status `PROCESSING`, pois os arquivos estão sendo analisados de forma assíncrona por um worker.
+
+---
+
+### 🔄 2. Verificar status da análise
+
+Com o `log_id` em mãos, você pode consultar o resultado da análise utilizando o endpoint:
+
+GET /logs/{log_id}
+
+#### Possíveis status:
+- `PROCESSING`: A análise ainda está em andamento.
+- `PROCESSED`: A análise foi concluída com sucesso.
+- `FAILED`: Ocorreu uma falha no processamento.
+
+Se o status for `PROCESSED`, o log conterá também o resultado da análise — incluindo os currículos mais compatíveis com a vaga, acompanhados de justificativas claras.
+
+---
