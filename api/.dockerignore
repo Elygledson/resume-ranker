@@ -6,10 +6,3 @@ __pycache__/
 *.env
 .env
 .env.*
-
-.git
-.gitignore
-.vscode
-.idea
-.DS_Store
-Thumbs.db
