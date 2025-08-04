@@ -61,8 +61,8 @@ As imagens abaixo ilustram o pipeline de execução da aplicação e a arquitetu
 ### 1. Clone o repositório
 
 ```bash
-git clone https://github.com/Elygledson/resume-analyzer
-cd seu-repositorio
+git clone https://github.com/Elygledson/resume-ranker
+cd resume-ranker
 ```
 
 ---
@@ -145,5 +145,6 @@ GET /logs/{log_id}
 - `FAILED`: Ocorreu uma falha no processamento.
 
 Se o status for `PROCESSED`, o log conterá também o resultado da análise — incluindo os currículos mais compatíveis com a vaga, acompanhados de justificativas claras.
+
 
 ---
