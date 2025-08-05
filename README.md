@@ -71,6 +71,9 @@ cd resume-ranker
 
 ### 2. Crie um arquivo .env com o seguinte conteúdo:
 
+> Você pode **alternar o serviço de IA** (entre `ollama` e `gemini`) apenas alterando a variável `AI_SERVICE_NAME` — graças à implementação dos padrões **Factory** e **Strategy**, não é necessário modificar o código para essa troca.
+
+
 ```bash
 # REDIS
 REDIS_HOST=localhost
