@@ -17,7 +17,7 @@ Pensando nisso, esta aplicação foi desenvolvida para automatizar a leitura, su
   - `user_id`
   - `timestamp`
   - `query`
-  - `resultado`
+  - `result`
 - Sem armazenamento completo dos arquivos (apenas metadados)
 - Empacotado com Docker
 - Swagger interativo com exemplos de uso
@@ -44,7 +44,7 @@ Pensando nisso, esta aplicação foi desenvolvida para automatizar a leitura, su
    - Resume o conteúdo
    - Gera embeddings
    - Calcula a similaridade com a vaga usando **distância do cosseno**
-4. Apenas documentos com **score > 60%** são enviados para avaliação do modelo LLM.
+4. Apenas documentos com **score > 50%** são enviados para avaliação do modelo LLM.
 5. O modelo retorna os currículos que mais combinam com a vaga, com **justificativas claras**.
 6. A execução é registrada no MongoDB para fins de auditoria e rastreabilidade.
 
@@ -125,7 +125,7 @@ Você deve fazer uma requisição `POST` para o endpoint `/analyze-resume`, envi
 - `user_id`: Identificador do usuário solicitante (UUID)
 - `query`: *(opcional)* Texto da vaga ou pergunta a ser usada na análise
 
-#### ✅ Resposta esperada:
+#### Resposta esperada:
 A API irá retornar um `log_id`.  
 Esse ID identifica a requisição de análise e pode ser usado para consultar o resultado posteriormente.
 
@@ -133,7 +133,7 @@ O log inicialmente terá o status `PROCESSING`, pois os arquivos estão sendo an
 
 ---
 
-### 🔄 2. Verificar status da análise
+### 2. Verificar status da análise
 
 Com o `log_id` em mãos, você pode consultar o resultado da análise utilizando o endpoint:
 
@@ -146,6 +146,39 @@ GET /logs/{log_id}
 
 Se o status for `PROCESSED`, o log conterá também o resultado da análise — incluindo os currículos mais compatíveis com a vaga, acompanhados de justificativas claras.
 
+### 3. Oportunidades de melhoria:
+- Realizar testes mais abrangentes para garantir robustez e confiabilidade.
+
+- Adicionar um serviço de armazenamento (por exemplo, MinIO) para gerenciar arquivos de forma mais eficiente.
+
+- Criar uma validação pré-processamento que verifique se o arquivo enviado é realmente um currículo antes de prosseguir com o processamento.
+
+### 4. Observações:
+
+Se você não pretende utilizar o Ollama, remova previamente o container relacionado antes de construir os demais, evitando recursos desnecessários do docker-compose.yml antes de executar o docker compose up -d --build.
+
+Caso seu ambiente possua suporte a CUDA, é possível executar o Ollama com aceleração por GPU. Para isso, adicione o seguinte serviço ao seu docker-compose.yml:
+
+```bash
+  ollama:
+    build:
+      context: ./ollama
+      dockerfile: Dockerfile
+    container_name: resume_analyzer_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_vol:/ollama
+    networks:
+      - resume_analyzer_network
+    entrypoint: [ "/usr/bin/bash", "pull-llama3.sh" ]
+    restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+```
+Certifique-se de que o driver NVIDIA e o NVIDIA Container Toolkit estejam instalados no host para que a GPU seja reconhecida no container.
 
 ---
-

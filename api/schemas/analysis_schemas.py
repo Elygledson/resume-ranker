@@ -13,12 +13,17 @@ class ResumeAnalysisStartedResponse(BaseModel):
 class SummaryResume(BaseModel):
     candidate_name: str = Field(..., description="Nome do candidato")
     summary: str = Field(..., description="Resumo extraído do currículo")
+    score: Optional[float] = Field(
+        default=0,
+        description="Pontuação de similaridade do candidato com a vaga"
+    )
 
     class Config:
         json_schema_extra = {
             "example": {
                 "candidate_name": "Maria Silva",
                 "summary": "Engenheira de software com 5 anos de experiência em Python e liderança de equipes.",
+                "score": 0.6
             }
         }
 
@@ -38,10 +43,12 @@ class AnalysisOutputSchema(BaseModel):
                     {
                         "candidate_name": "Maria Silva",
                         "summary": "Engenheira de software com 5 anos de experiência em Python e liderança de equipes.",
+                        "score": 0.8,
                     },
                     {
                         "candidate_name": "João Souza",
                         "summary": "Desenvolvedor backend com 2 anos de experiência em Java e Spring Boot.",
+                        "score": 0.6,
                     }
                 ],
                 "justification": "Maria Silva apresentou maior aderência aos critérios de liderança e domínio em Python."

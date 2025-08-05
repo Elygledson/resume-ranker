@@ -15,7 +15,7 @@ class LogModel(BaseModel):
     timestamp: datetime
     query: Optional[str] = None
     status: Status
-    resultado: Optional[AnalysisOutputSchema] = None
+    result: Optional[AnalysisOutputSchema] = None
     feedback: Optional[bool] = None
 
     class Config:

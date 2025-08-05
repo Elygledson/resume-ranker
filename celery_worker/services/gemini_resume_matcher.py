@@ -63,8 +63,8 @@ class GeminiResumeMatcher(BaseResumeMatcher):
         )
         return SummaryResume(**response.parsed)
 
-    def rank_resumes_by_similarity(self, query: str, resumes: List[SummaryResume], k: int = 3, threshold: float = 0.5) -> List[SummaryResume]:
-        scored_resumes = []
+    def rank_resumes_by_similarity(self, query: str, resumes: List[SummaryResume], k: int = 5, threshold: float = 0.5) -> List[SummaryResume]:
+        scored_resumes: List[SummaryResume] = []
         query_embedding = self._get_embedding(query)
 
         for resume in resumes:
@@ -75,16 +75,22 @@ class GeminiResumeMatcher(BaseResumeMatcher):
                 query_embedding, resume_embedding)
 
             if similarity >= threshold:
-                scored_resumes.append((resume, similarity))
+                resume.score = similarity
+                scored_resumes.append(resume)
 
-        scored_resumes.sort(key=lambda x: x[1], reverse=True)
+        scored_resumes.sort(key=lambda x: x.score or 0, reverse=True)
+        top_k = scored_resumes[:k]
 
-        top_k = [resume for resume, _ in scored_resumes[:k]]
-        logger.info(f'{scored_resumes}')
+        logger.info(
+            f"Top {len(top_k)} currículos selecionados (threshold={threshold}, k={k}): "
+            + ", ".join(f"{r.candidate_name} ({r.score}%)" for r in top_k)
+        )
+
         return top_k
 
     def generate_candidate_justification(self, query: str, resumes: List[SummaryResume]) -> str:
-        summaries = chr(10).join([f"{i+1}. Nome: {r.candidate_name}\nResumo: {r.summary}" for i, r in enumerate(resumes)])
+        summaries = chr(10).join(
+            [f"{i+1}. Nome: {r.candidate_name}\nResumo: {r.summary}" for i, r in enumerate(resumes)])
 
         contents = f"""
         A seguir está a descrição da vaga ou necessidade:
