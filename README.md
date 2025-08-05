@@ -163,7 +163,7 @@ Se o status for `PROCESSED`, o log conterá também o resultado da análise — 
 
 ### 4. Observações:
 
-Se você não pretende utilizar o Ollama, remova previamente o container relacionado antes de construir os demais, evitando recursos desnecessários do docker-compose.yml antes de executar o docker compose up -d --build.
+Se você não pretende utilizar o Ollama, remova previamente o container e o volume relacionado antes de construir os demais, evitando recursos desnecessários do docker-compose.yml antes de executar o docker compose up -d --build.
 
 Caso seu ambiente possua suporte a CUDA, é possível executar o Ollama com aceleração por GPU. Para isso, adicione o seguinte serviço ao seu docker-compose.yml:
 
