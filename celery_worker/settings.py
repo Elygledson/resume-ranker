@@ -1,13 +1,16 @@
+from pathlib import Path
 from pydantic_settings import BaseSettings
+
+BASE_DIR = Path(__file__).parent.parent.resolve()
 
 
 class Settings(BaseSettings):
+    STORAGE: str
     REDIS_DB: str
     REDIS_HOST: str
     REDIS_PORT: str
     AI_SERVICE_KEY: str
-    SWAGGER_USERNAME: str
-    SWAGGER_PASSWORD: str
+    AI_SERVICE_NAME: str
     MONGO_INITDB_ROOT_PORT: str
     MONGO_INITDB_ROOT_HOST: str
     MONGO_INITDB_ROOT_DBNAME: str
@@ -24,7 +27,7 @@ class Settings(BaseSettings):
         )
 
     class Config:
-        env_file = ".env"
+        env_file = BASE_DIR / ".env",
         env_file_encoding = "utf-8"
 
 

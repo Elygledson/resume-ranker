@@ -4,11 +4,13 @@ services:
   api:
     container_name: resume_analyzer_api
     build:
-      context: .
+      context: ./api
       dockerfile: Dockerfile
     restart: unless-stopped
     env_file:
       - .env
+    volumes:
+      - storage:/app/static
     ports:
       - "8000:8000"
     depends_on:
@@ -22,12 +24,13 @@ services:
   celery:
     container_name: resume_analyzer_celery
     build:
-      context: .
+      context: ./celery_worker
       dockerfile: Dockerfile
-    command: celery --app celery_app.config.app worker --loglevel=info --pool=prefork
     restart: unless-stopped
     env_file:
       - .env
+    volumes:
+      - storage:/app/static
     depends_on:
       mongo:
         condition: service_healthy
@@ -94,6 +97,7 @@ networks:
     driver: bridge
 
 volumes:
+  storage:
   mongo_data:
   redis_data:
   ollama_vol:

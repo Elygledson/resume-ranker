@@ -50,9 +50,11 @@ class OllamaResumeMatcher(BaseResumeMatcher):
                 "properties": {
                     "candidate_name": {
                         "type": "string",
+                        "description": "Nome completo do candidato"
                     },
                     "summary": {
                         "type": "string",
+                        "description": "Um resumo completo e detalhado, incluindo formação acadêmica, principais experiências profissionais, competências e habilidades."
                     }
                 },
                 "required": [
@@ -63,9 +65,9 @@ class OllamaResumeMatcher(BaseResumeMatcher):
         })
         return SummaryResume(**json.loads(response.json()['message']['content']))
 
-    def rank_resumes_by_similarity(self, query: str, resumes: List[SummaryResume], k: int = 3, threshold: float = 0.5) -> List[SummaryResume]:
+    def rank_resumes_by_similarity(self, query: str, resumes: List[SummaryResume], k: int = 5, threshold: float = 0.5) -> List[SummaryResume]:
+        scored_resumes: List[SummaryResume] = []
         query_embedding = self._get_embedding(query)
-        scored_resumes = []
 
         for resume in resumes:
 
@@ -75,44 +77,47 @@ class OllamaResumeMatcher(BaseResumeMatcher):
                 query_embedding, resume_embedding)
 
             if similarity >= threshold:
-                scored_resumes.append((resume, similarity))
+                resume.score = similarity
+                scored_resumes.append(resume)
 
-        scored_resumes.sort(key=lambda x: x[1], reverse=True)
+        scored_resumes.sort(key=lambda x: x.score or 0, reverse=True)
+        top_k = scored_resumes[:k]
 
-        top_k = [resume for resume, _ in scored_resumes[:k]]
-        logger.info(f'{scored_resumes}')
+        logger.info(
+            f"Top {len(top_k)} currículos selecionados (threshold={threshold}, k={k}): "
+            + ", ".join(f"{r.candidate_name} ({r.score}%)" for r in top_k)
+        )
+
         return top_k
 
     def generate_candidate_justification(self, query: str, resumes: List[SummaryResume]) -> str:
-        summaries = {chr(10).join(
-            [f"{i+1}. Nome: {r.candidate_name}\nResumo: {r.summary}" for i, r in enumerate(resumes)])}
+        summaries = chr(10).join(
+            [f"{i+1}. Nome: {r.candidate_name}\nResumo: {r.summary}" for i, r in enumerate(resumes)])
 
         prompt = f"""
-            Você é uma especialista em análise de currículos com foco em identificar o candidato mais adequado com base em uma necessidade específica.
+        Você é uma especialista em análise de currículos com foco em identificar o candidato mais adequado com base em uma necessidade específica.
 
-            A seguir está a descrição da vaga ou necessidade:
-            ---
-            {query}
-            ---
+        A seguir está a descrição da vaga ou necessidade:
+        ---
+        {query}
+        ---
 
-            Com base nessa necessidade, analise detalhadamente os seguintes currículos, extraídos previamente e já resumidos:
+        Com base nessa necessidade, analise detalhadamente os seguintes currículos, extraídos previamente e já resumidos:
 
-            Resumos:
-            {summaries}
+        Resumos:
+        {summaries}
 
-            Tarefa:
-            1. Avalie cada candidato em relação aos requisitos e contexto da vaga.
-            2. Identifique o candidato que mais se adequa à descrição fornecida.
-            3. Justifique sua escolha com base nas experiências, habilidades ou formação descritas no resumo.
-            4. Seja claro, objetivo e completo na justificativa.
+        Tarefa:
+        1. Avalie cada candidato em relação aos requisitos e contexto da vaga.
+        2. Identifique o candidato que mais se adequa à descrição fornecida.
+        3. Justifique sua escolha com base nas experiências, habilidades ou formação descritas no resumo.
+        4. Seja claro, objetivo e completo na justificativa.
 
-            Formato da resposta:
-            - Candidato mais adequado: <Nome>
-            - Justificativa: <Texto detalhado explicando por que este candidato é o mais adequado em comparação aos demais.>
+        Formato da resposta:
+        - Candidato mais adequado: <Nome>
+        - Justificativa: <Texto detalhado explicando por que este candidato é o mais adequado em comparação aos demais>
         """
-
         logger.info(f'{prompt}')
-
         response = requests.post(f"{settings.AI_SERVICE_KEY}/generate", json={
             "prompt": prompt,
             "stream": False,

@@ -3,7 +3,6 @@ import uvicorn
 from fastapi import FastAPI
 from routers import analyzer, logs
 from fastapi.security import HTTPBasic
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -21,8 +20,6 @@ app = FastAPI(
 
 app.include_router(analyzer, prefix='/api/v1', tags=['analyzer'])
 app.include_router(logs, prefix='/api/v1', tags=['logs'])
-
-app.mount("/api/static", StaticFiles(directory="static"), name="static")
 
 app.add_middleware(
     CORSMiddleware,
