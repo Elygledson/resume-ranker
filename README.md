@@ -71,7 +71,7 @@ cd resume-ranker
 
 ### 2. Crie um arquivo .env com o seguinte conteúdo:
 
-> Você pode **alternar o serviço de IA** (entre `ollama` e `gemini`) apenas alterando a variável `AI_SERVICE_NAME` — graças à implementação dos padrões **Factory** e **Strategy**, não é necessário modificar o código para essa troca.
+> Você pode **alternar o serviço de IA** (entre `ollama` e `gemini`) apenas alterando a variável `AI_SERVICE_NAME` — graças à implementação dos padrões **Factory** e **Strategy**, não é necessário modificar o core da aplicação para essa troca.
 
 
 ```bash
@@ -190,3 +190,4 @@ Caso seu ambiente possua suporte a CUDA, é possível executar o Ollama com acel
 Certifique-se de que o driver NVIDIA e o NVIDIA Container Toolkit estejam instalados no host para que a GPU seja reconhecida no container.
 
 ---
+
