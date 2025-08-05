@@ -61,8 +61,8 @@ As imagens abaixo ilustram o pipeline de execução da aplicação e a arquitetu
 ### 1. Clone o repositório
 
 ```bash
-git clone https://github.com/Elygledson/resume-analyzer
-cd seu-repositorio
+git clone https://github.com/Elygledson/resume-ranker
+cd resume-ranker
 ```
 
 ---
