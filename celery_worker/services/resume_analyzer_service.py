@@ -10,7 +10,7 @@ class ResumeAnalyzerService:
     def generate_summary(self, content: str) -> SummaryResume:
         return self.llm_service.extract_summary_from_resume(content)
 
-    def rank_resumes(self, query: str, resumes: List[SummaryResume], k: int = 3, threshold: float = 0.5) -> List[SummaryResume]:
+    def rank_resumes(self, query: str, resumes: List[SummaryResume], k: int = 5, threshold: float = 0.5) -> List[SummaryResume]:
         return self.llm_service.rank_resumes_by_similarity(query, resumes, k, threshold)
 
     def generate_justification(self, query: str, resumes: List[SummaryResume]) -> str:

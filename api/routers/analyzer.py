@@ -16,10 +16,7 @@ from schemas import LogCreateSchema, Status, ResumeAnalysisStartedResponse
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-os.makedirs(settings.STORAGE, exist_ok=True)
-
 analyzer = APIRouter()
-
 
 def get_log_service() -> LogService:
     repo = LogRepositoryMongo(get_mongo_collection('logs'))

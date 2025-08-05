@@ -23,7 +23,7 @@ class LogCreateSchema(BaseModel):
         None, description="Consulta feita pelo usuário"
     )
     status: Status
-    resultado: Optional[AnalysisOutputSchema] = Field(
+    result: Optional[AnalysisOutputSchema] = Field(
         None, description="Resposta gerada pela aplicação"
     )
     feedback: Optional[bool] = Field(
@@ -39,15 +39,17 @@ class LogCreateSchema(BaseModel):
                 "timestamp": "2025-08-02T14:00:00Z",
                 "query": "engenheiro com experiência em Python e liderança",
                 "status": "PROCESSED",
-                "resultado": {
+                "result": {
                     "resumes": [
                         {
                             "candidate_name": "Maria Silva",
                             "summary": "Engenheira de software com 5 anos de experiência em Python e liderança de equipes.",
+                            "score": 0.8,
                         },
                         {
                             "candidate_name": "João Souza",
                             "summary": "Desenvolvedor backend com 2 anos de experiência em Java e Spring Boot.",
+                            "score": 0.6,
                         }
                     ],
                     "justification": "Maria Silva apresentou maior aderência aos critérios de liderança e domínio em Python."
@@ -58,7 +60,7 @@ class LogCreateSchema(BaseModel):
 
 class LogUpdateSchema(BaseModel):
     status: Optional[Status] = None
-    resultado: Optional[AnalysisOutputSchema] = None
+    result: Optional[AnalysisOutputSchema] = None
     feedback: Optional[bool] = None
 
     class Config:
