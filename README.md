@@ -107,6 +107,8 @@ A documentação interativa da API está disponível em:
 
 Nela, você encontrará todos os endpoints organizados por módulos:
 
+---
+
 ### 🔹 Módulos disponíveis
 
 - **Analyzer**
@@ -130,6 +132,9 @@ A API irá retornar um `log_id`.
 Esse ID identifica a requisição de análise e pode ser usado para consultar o resultado posteriormente.
 
 O log inicialmente terá o status `PROCESSING`, pois os arquivos estão sendo analisados de forma assíncrona por um worker.
+
+**Destaque Importante:**  
+Graças à implementação de padrões de projeto como **Factory** e **Strategy**, é possível **adicionar ou trocar serviços de análise, OCR ou LLM de forma rápida e modular**, sem alterar o núcleo da aplicação. Isso garante escalabilidade e facilidade de manutenção.
 
 ---
 
