@@ -1,13 +1,12 @@
 import logging
+
 from http import HTTPStatus
 from typing import Optional, List
-
-from fastapi import APIRouter, Depends
-
 from config import get_mongo_collection
 from services.log_service import LogService
 from repositories import LogRepositoryMongo
-from schemas.logs_schemas import LogOutputSchema
+from fastapi import APIRouter, Depends, Query
+from schemas import LogOutputSchema, PaginatedLogsSchema
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -44,6 +43,33 @@ def patch(
         LogOutputSchema: Log atualizado com o novo feedback.
     """
     return log_service.patch_feedback(log_id, feedback)
+
+
+@logs.get(
+    "/logs/paginated",
+    status_code=HTTPStatus.OK,
+    response_model=PaginatedLogsSchema,
+    summary="Listar logs com paginação",
+    description="Retorna uma lista paginada de logs."
+)
+def get_all_paginated(
+    skip: int = Query(0, ge=0, description="Número de registros para pular"),
+    limit: int = Query(
+        10, ge=1, le=100, description="Número máximo de registros para retornar"),
+    log_service: LogService = Depends(get_log_service)
+):
+    """
+    Lista paginada de logs.
+
+    Args:
+        skip (int): Quantos registros pular (offset).
+        limit (int): Quantos registros retornar (limite).
+        log_service (LogService): Serviço de log injetado via dependência.
+
+    Returns:
+        PaginatedLogsSchema: logs registrados paginados.
+    """
+    return log_service.get_all_paginated(skip=skip, limit=limit)
 
 
 @logs.get(

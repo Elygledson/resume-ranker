@@ -1,19 +1,21 @@
 from bson import ObjectId
 from models import LogModel
+from pydantic import TypeAdapter
 from typing import List, Optional
-from repositories import CRUDRepository
 from fastapi import HTTPException, status
-from schemas import LogCreateSchema, LogUpdateSchema
+from repositories import CRUDRepository, PaginatedResult
+from schemas import LogCreateSchema, LogUpdateSchema, PaginatedLogsSchema, LogOutputSchema
 
 
 class LogService:
     def __init__(self, repo: CRUDRepository[LogModel, LogCreateSchema, LogUpdateSchema, str]):
         self.repo = repo
 
-    def create(self, data: LogCreateSchema) -> LogModel:
-        return self.repo.create(data)
+    def create(self, data: LogCreateSchema) -> LogOutputSchema:
+        log = self.repo.create(data)
+        return LogOutputSchema.model_validate(log)
 
-    def get(self, id: str) -> Optional[LogModel]:
+    def get(self, id: str) -> Optional[LogOutputSchema]:
         if not ObjectId.is_valid(id):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -27,18 +29,33 @@ class LogService:
                 detail="Log não encontrado"
             )
 
-        return log
+        return LogOutputSchema.model_validate(log)
 
-    def get_all(self) -> List[LogModel]:
-        return self.repo.find_all()
+    def get_all(self) -> List[LogOutputSchema]:
+        logs = self.repo.find_all()
+        return TypeAdapter(list[LogOutputSchema]).validate_python(logs)
 
-    def update(self, id: str, data: LogUpdateSchema) -> LogUpdateSchema:
+    def get_all_paginated(self, skip: int = 0, limit: int = 10) -> PaginatedLogsSchema:
+        paginated: PaginatedResult[LogModel] = self.repo.find_all_paginated(
+            skip, limit)
+        return PaginatedLogsSchema(
+            total=paginated.total,
+            skip=paginated.skip,
+            limit=paginated.limit,
+            data=[LogOutputSchema.model_validate(
+                log) for log in paginated.data]
+        )
+
+    def update(self, id: str, data: LogUpdateSchema) -> LogOutputSchema:
         log = self.get(id)
-        return self.repo.update(log.id, data)
+        updated_log = self.repo.update(log.id, data)
+        return LogOutputSchema.model_validate(updated_log)
 
-    def patch_feedback(self, id: str, feedback: bool) -> LogUpdateSchema:
+    def patch_feedback(self, id: str, feedback: bool) -> LogOutputSchema:
         log = self.get(id)
-        return self.repo.update(log.id, LogUpdateSchema(feedback=feedback))
+        updated_log = self.repo.update(
+            log.id, LogUpdateSchema(feedback=feedback))
+        return LogOutputSchema.model_validate(updated_log)
 
     def delete(self, id: str) -> None:
         log = self.get(id)
