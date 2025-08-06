@@ -85,6 +85,7 @@ class PaginatedLogsSchema(BaseModel):
     data: List[LogOutputSchema]
 
     class Config:
+        from_attributes = True
         json_schema_extra = {
             "example": {
                 "total": 150,

@@ -38,13 +38,7 @@ class LogService:
     def get_all_paginated(self, skip: int = 0, limit: int = 10) -> PaginatedLogsSchema:
         paginated: PaginatedResult[LogModel] = self.repo.find_all_paginated(
             skip, limit)
-        return PaginatedLogsSchema(
-            total=paginated.total,
-            skip=paginated.skip,
-            limit=paginated.limit,
-            data=[LogOutputSchema.model_validate(
-                log) for log in paginated.data]
-        )
+        return PaginatedLogsSchema.model_validate(paginated)
 
     def update(self, id: str, data: LogUpdateSchema) -> LogOutputSchema:
         log = self.get(id)
